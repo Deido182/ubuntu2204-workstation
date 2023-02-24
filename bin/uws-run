@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Source env variables
+[[ $0 == /* ]] && env_vars_file="$(dirname $0)" || env_vars_file="$(pwd $(dirname $0))/$(dirname $0)"
+env_vars_file="${env_vars_file}/../setup/.uws-env-vars"
+. "${env_vars_file}"
+
+sudo docker run -ti --privileged \
+	--name="${UWS_CONTAINER_NAME}" \
+	--volume="${UWS_PERS_STORAGE_DIR}:/$(basename ${UWS_PERS_STORAGE_DIR})" \
+	${UWS_IMAGE_TAG}
+
+sudo docker logs "${UWS_CONTAINER_NAME}" > "${UWS_LOGS_DIR}/$(date "+%Y%m%d-%H%M%S")-log"
+
+sudo docker rm "${UWS_CONTAINER_NAME}"

@@ -1,0 +1,37 @@
+#!/bin/bash -i
+# Run as 'interactive' so as to being able to source ~/.bashrc
+
+# Source env vars
+. "$(pwd $(dirname $0))/$(dirname $0)/.uws-env-vars"
+
+if [ $? -ne 0 ]; then
+	echo "Missing uws environment variables"
+	exit 1
+fi
+
+# Clean up dirs
+sudo rm -rf "${UWS_LOGS_DIR}" "${UWS_PERS_STORAGE_DIR}"
+mkdir "${UWS_LOGS_DIR}" "${UWS_PERS_STORAGE_DIR}"
+
+if [ $? -ne 0 ]; then
+	echo "Error creating uws directories"
+	exit 1
+fi
+
+# Clean up old image and create the new one from the dockerfile
+sudo docker rmi "${UWS_IMAGE_TAG}" 2> /dev/null
+sudo docker build --file="${UWS_IMAGE_DOCKERFILE_PATH}" --tag="${UWS_IMAGE_TAG}" "${UWS_IMAGE_CONTEXT_DIR}"
+
+if [ $? -ne 0 ]; then
+	echo "Error building the new uws image"
+        exit 1
+fi
+
+# Possibly update PATH
+. ~/.bashrc
+if [[ ":$PATH:" != *":${UWS_BIN_DIR}:"* ]]; then
+	echo "Adding uws bin dir to $USER's PATH"
+        echo "#Added on $(date "+%d/%m/%Y") installing uws (ubuntu2204-workstation)" >> ~/.bashrc
+	echo "export PATH=$(realpath ${UWS_BIN_DIR}):\$PATH" >> ~/.bashrc
+	echo "Installation completed: either use ${UWS_BIN_DIR}/uws-run directly or open a new terminal"
+fi

@@ -1,0 +1,11 @@
+#!/bin/bash
+# Source env variables
+[[ $0 == /* ]] && UWS_MAIN_DIR="$(dirname $0)" || UWS_MAIN_DIR="$(pwd $(dirname $0))/$(dirname $0)"
+UWS_MAIN_DIR=$(realpath "${UWS_MAIN_DIR}/..")
+UWS_BIN_DIR="${UWS_MAIN_DIR}/bin"
+UWS_LOGS_DIR="${UWS_MAIN_DIR}/logs"
+UWS_PERS_STORAGE_DIR="${UWS_MAIN_DIR}/persistent-storage"
+UWS_IMAGE_CONTEXT_DIR="${UWS_MAIN_DIR}/container-image-context"
+UWS_IMAGE_DOCKERFILE_PATH="${UWS_IMAGE_CONTEXT_DIR}/Dockerfile"
+UWS_CONTAINER_NAME=ubuntu2204-ws
+UWS_IMAGE_TAG="quay.io/davide_franchi_182/my-quay-repo/${UWS_CONTAINER_NAME}"
