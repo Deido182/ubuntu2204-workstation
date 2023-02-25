@@ -10,13 +10,13 @@ RUN apt-get -y install curl
 RUN apt-get -y install vim
 RUN apt-get -y install sudo
 
+# The first are those considered by default when running 'search'
+# The 'insecure' ones instead should not be used like this
+# Anyway, without doing so you would be required to always run commands with '--tls-verify=false'
 RUN echo '[registries.search]' >> /etc/containers/registries.conf
 RUN echo 'registries = ["registry.access.redhat.com", "registry.redhat.io", "quay.io"]' >> /etc/containers/registries.conf
 RUN echo '[registries.insecure]' >> /etc/containers/registries.conf
 RUN echo 'registries = ["registry.access.redhat.com", "registry.redhat.io", "quay.io"]' >> /etc/containers/registries.conf
-# The first are those considered by default when running 'search'
-# The 'insecure' ones instead should not be used like this. 
-# Anyway, without doing so you would be required to always run commands with '--tls-verify=false'
 
 ENV PERS_STORAGE_DIR=/persistent-storage
 ENV USER_PERS_STORAGE_DIR="${PERS_STORAGE_DIR}/user"
@@ -31,6 +31,7 @@ RUN adduser user "${USER_PERS_STORAGE_GROUP}"
 # Change default user shell
 RUN usermod --shell /bin/bash user
 
-COPY container-setup.sh /.setup.sh
+# The following must be performed at runtime
+COPY container-setup /.setup
 ENTRYPOINT ["/bin/bash", "-c"]
-CMD ["/.setup.sh"]
+CMD ["/.setup"]
