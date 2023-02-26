@@ -2,9 +2,8 @@
 
 # Manage persistent storage
 
-dirs_list=("${USER_PERS_STORAGE_DIR} ${USER_FREE_PERS_STORAGE_DIR} ${USER_STRUCT_PERS_STORAGE_DIR}")
-for dir in ${dirs_list}
-do
+dirs_list=("${USER_PERS_STORAGE_DIR} ${USER_FREE_PERS_STORAGE_DIR} ${USER_STRUCT_PERS_STORAGE_DIR} ${USER_STRUCT_PERS_STORAGE_DIR_ROOT}")
+for dir in ${dirs_list}; do
 	if [ ! -d "${dir}" ]; then
   		mkdir --parents "${dir}"
 	fi
@@ -14,26 +13,30 @@ if [ ! -f "${USER_STRUCT_PERS_FILES_LIST}" ]; then
 fi
 
 chown root:root "${PERS_STORAGE_DIR}" "${USER_PERS_STORAGE_DIR}"
-chmod 770 "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_FILES_LIST}"
-chgrp "${USER_PERS_STORAGE_GROUP}" "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_FILES_LIST}"
+chmod 770 "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_FILES_LIST}" "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
+chgrp "${USER_PERS_STORAGE_GROUP}" "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_FILES_LIST}" \
+	"${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
 
 # Store required user files on closing
 function store() {
 	echo "Going to persistently store the following user files:"
 	echo $(cat "${USER_STRUCT_PERS_FILES_LIST}")
 	# Remove old content
-	rm -r ${USER_STRUCT_PERS_STORAGE_DIR_ROOT}/*
+	rm -rf ${USER_STRUCT_PERS_STORAGE_DIR_ROOT}/*
+	cd /
 	while IFS= read -r file_path; do
-                runuser - user -c 'cp --preserve --parents "${file_path}" "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"'
+                runuser user -c "cp --preserve --parents ${file_path:1} ${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
         done < "${USER_STRUCT_PERS_FILES_LIST}"
 }
-# The signal emitted on container 'stop'
-trap 'echo "Hi! how are you?" && store' SIGTERM
+trap 'store' EXIT SIGTERM SIGKILL
 
 # Load user persistent files on opening
 function load() {
+	echo "Going to load the following user files:"
+        echo $(cat "${USER_STRUCT_PERS_FILES_LIST}")
+	cd "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
 	while IFS= read -r file_path; do
-		runuser - user -c 'cp --preserve --parents "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}${file_path}" /'
+		runuser user -c "cp --preserve --parents ${file_path:1} /"
 	done < "${USER_STRUCT_PERS_FILES_LIST}"
 }
 load
