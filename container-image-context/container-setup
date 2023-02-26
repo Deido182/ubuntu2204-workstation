@@ -1,12 +1,44 @@
 #!/bin/bash
 
 # Manage persistent storage
-if [ ! -d "${USER_PERS_STORAGE_DIR}" ]; then
-  mkdir --parents "${USER_PERS_STORAGE_DIR}"
+
+dirs_list=("${USER_PERS_STORAGE_DIR} ${USER_FREE_PERS_STORAGE_DIR} ${USER_STRUCT_PERS_STORAGE_DIR}")
+for dir in ${dirs_list}
+do
+	if [ ! -d "${dir}" ]; then
+  		mkdir --parents "${dir}"
+	fi
+done
+if [ ! -f "${USER_STRUCT_PERS_FILES_LIST}" ]; then
+        touch "${USER_STRUCT_PERS_FILES_LIST}"
 fi
-chown root:root "${PERS_STORAGE_DIR}"
-chmod 770 "${USER_PERS_STORAGE_DIR}"
-chgrp "${USER_PERS_STORAGE_GROUP}" "${USER_PERS_STORAGE_DIR}"
+
+chown root:root "${PERS_STORAGE_DIR}" "${USER_PERS_STORAGE_DIR}"
+chmod 770 "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_FILES_LIST}"
+chgrp "${USER_PERS_STORAGE_GROUP}" "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_FILES_LIST}"
+
+# Store required user files on closing
+function store() {
+	echo "Going to persistently store the following user files:"
+	echo $(cat "${USER_STRUCT_PERS_FILES_LIST}")
+	# Remove old content
+	rm -r ${USER_STRUCT_PERS_STORAGE_DIR_ROOT}/*
+	while IFS= read -r file_path; do
+                runuser - user -c 'cp --preserve --parents "${file_path}" "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"'
+        done < "${USER_STRUCT_PERS_FILES_LIST}"
+}
+# The signal emitted on container 'stop'
+trap 'echo "Hi! how are you?" && store' SIGTERM
+
+# Load user persistent files on opening
+function load() {
+	while IFS= read -r file_path; do
+		runuser - user -c 'cp --preserve --parents "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}${file_path}" /'
+	done < "${USER_STRUCT_PERS_FILES_LIST}"
+}
+load
 
 # Finally login with the new user (as we are root, pw is not required)
-su - user
+cd /home/user
+# Without '-' it does not perform login (and therefore preserves env vars)
+su user

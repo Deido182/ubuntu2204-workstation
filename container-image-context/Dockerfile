@@ -23,6 +23,12 @@ RUN echo 'registries = ["registry.access.redhat.com", "registry.redhat.io", "qua
 ENV PERS_STORAGE_DIR=/persistent-storage
 ENV USER_PERS_STORAGE_DIR="${PERS_STORAGE_DIR}/user"
 ENV USER_PERS_STORAGE_GROUP=user-pers-storage-group
+# Used by user to freely store files
+ENV USER_FREE_PERS_STORAGE_DIR="${USER_PERS_STORAGE_DIR}/free"
+# Used by 'persist' command to store files preserving file system structure
+ENV USER_STRUCT_PERS_STORAGE_DIR="${USER_PERS_STORAGE_DIR}/structured"
+ENV USER_STRUCT_PERS_STORAGE_DIR_ROOT="${USER_STRUCT_PERS_STORAGE_DIR}/root"
+ENV USER_STRUCT_PERS_FILES_LIST="${USER_STRUCT_PERS_STORAGE_DIR}/.files-list"
 
 RUN useradd -m user && echo "user:user" | chpasswd
 RUN addgroup "${USER_PERS_STORAGE_GROUP}"
@@ -38,6 +44,10 @@ RUN echo 'set cursorline' >> /home/user/.vimrc
 RUN echo 'set cursorcolumn' >> /home/user/.vimrc
 RUN echo 'set number' >> /home/user/.vimrc
 
+# Command to structurally persist user files
+COPY user-persist /usr/bin/persist
+RUN chmod 770 /usr/bin/persist
+RUN chgrp "${USER_PERS_STORAGE_GROUP}" /usr/bin/persist 
 # The following must be performed at runtime
 COPY container-setup /.setup
 ENTRYPOINT ["/bin/bash", "-c"]
