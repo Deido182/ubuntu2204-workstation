@@ -10,6 +10,6 @@ sudo docker run -ti --privileged \
 	--volume="${UWS_PERS_STORAGE_DIR}:/$(basename ${UWS_PERS_STORAGE_DIR})" \
 	${UWS_IMAGE_TAG}
 
-sudo docker logs "${UWS_CONTAINER_NAME}" > "${UWS_LOGS_DIR}/$(date "+%Y%m%d-%H%M%S")-log"
+sudo docker logs --timestamps --since=0 "${UWS_CONTAINER_NAME}" > "${UWS_LOGS_DIR}/$(date "+%Y%m%d-%H%M%S")-log"
 
 sudo docker rm "${UWS_CONTAINER_NAME}"
