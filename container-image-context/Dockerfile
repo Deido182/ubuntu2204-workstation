@@ -31,6 +31,11 @@ RUN adduser user "${USER_PERS_STORAGE_GROUP}"
 # Change default user shell
 RUN usermod --shell /bin/bash user
 
+# Add default (useful) options for vim
+RUN echo 'set cursorline' >> /home/user/.vimrc
+RUN echo 'set cursorcolumn' >> /home/user/.vimrc
+RUN echo 'set number' >> /home/user/.vimrc
+
 # The following must be performed at runtime
 COPY container-setup /.setup
 ENTRYPOINT ["/bin/bash", "-c"]
