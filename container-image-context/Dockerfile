@@ -10,6 +10,7 @@ RUN apt-get -y install curl
 RUN apt-get -y install vim
 RUN apt-get -y install sudo
 RUN apt-get -y install mysql-client
+RUN apt-get -y install socat
 
 # The first are those considered by default when running 'search'
 # The 'insecure' ones instead should not be used like this
