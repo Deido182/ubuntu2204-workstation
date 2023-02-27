@@ -28,19 +28,23 @@ function copy_all() {
 
 # Store required user files on closing
 function store() {
-	echo "Going to persistently store the following user files:"
-	cat "${USER_STRUCT_PERS_FILES_LIST}"
-	# Remove old content
-	rm -rf ${USER_STRUCT_PERS_STORAGE_DIR_ROOT}/*
-	copy_all / "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
+	if [ -s "${USER_STRUCT_PERS_FILES_LIST}" ]; then
+		echo "Going to persistently store the following user files:"
+		cat "${USER_STRUCT_PERS_FILES_LIST}"
+		# Remove old content
+		rm -rf ${USER_STRUCT_PERS_STORAGE_DIR_ROOT}/*
+		copy_all / "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
+	fi
 }
 trap 'store' EXIT SIGTERM SIGKILL
 
 # Load user persistent files on opening
 function load() {
-	echo "Going to load the following user files:"
-        cat "${USER_STRUCT_PERS_FILES_LIST}"
-	copy_all "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}" /
+	if [ -s "${USER_STRUCT_PERS_FILES_LIST}" ]; then
+		echo "Going to load the following user files:"
+        	cat "${USER_STRUCT_PERS_FILES_LIST}"
+		copy_all "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}" /
+	fi
 }
 load
 
