@@ -17,27 +17,30 @@ chmod 770 "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${U
 chgrp "${USER_PERS_STORAGE_GROUP}" "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_FILES_LIST}" \
 	"${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
 
+function copy_all() {
+	from=$1
+	to=$2
+	cd ${from}
+	while IFS= read -r file_path; do
+                runuser user -c "cp --preserve --parents ${file_path:1} ${to}"
+        done < "${USER_STRUCT_PERS_FILES_LIST}"
+}
+
 # Store required user files on closing
 function store() {
 	echo "Going to persistently store the following user files:"
-	echo $(cat "${USER_STRUCT_PERS_FILES_LIST}")
+	cat "${USER_STRUCT_PERS_FILES_LIST}"
 	# Remove old content
 	rm -rf ${USER_STRUCT_PERS_STORAGE_DIR_ROOT}/*
-	cd /
-	while IFS= read -r file_path; do
-                runuser user -c "cp --preserve --parents ${file_path:1} ${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
-        done < "${USER_STRUCT_PERS_FILES_LIST}"
+	copy_all / "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
 }
 trap 'store' EXIT SIGTERM SIGKILL
 
 # Load user persistent files on opening
 function load() {
 	echo "Going to load the following user files:"
-        echo $(cat "${USER_STRUCT_PERS_FILES_LIST}")
-	cd "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
-	while IFS= read -r file_path; do
-		runuser user -c "cp --preserve --parents ${file_path:1} /"
-	done < "${USER_STRUCT_PERS_FILES_LIST}"
+        cat "${USER_STRUCT_PERS_FILES_LIST}"
+	copy_all "${USER_STRUCT_PERS_STORAGE_DIR_ROOT}" /
 }
 load
 
