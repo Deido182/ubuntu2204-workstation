@@ -44,10 +44,13 @@ RUN echo 'set cursorline' >> /home/user/.vimrc
 RUN echo 'set cursorcolumn' >> /home/user/.vimrc
 RUN echo 'set number' >> /home/user/.vimrc
 
-# Command to structurally persist user files
+# Command to structurally persist/unpersist user files
 COPY user-persist /usr/bin/persist
 RUN chmod 770 /usr/bin/persist
-RUN chgrp "${USER_PERS_STORAGE_GROUP}" /usr/bin/persist 
+RUN chgrp "${USER_PERS_STORAGE_GROUP}" /usr/bin/persist
+COPY user-unpersist /usr/bin/unpersist
+RUN chmod 770 /usr/bin/unpersist
+RUN chgrp "${USER_PERS_STORAGE_GROUP}" /usr/bin/unpersist 
 # The following must be performed at runtime
 COPY container-setup /.setup
 ENTRYPOINT ["/bin/bash", "-c"]
