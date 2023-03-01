@@ -17,13 +17,20 @@ chmod 770 "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${U
 chgrp "${USER_PERS_STORAGE_GROUP}" "${USER_FREE_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_STORAGE_DIR}" "${USER_STRUCT_PERS_FILES_LIST}" \
 	"${USER_STRUCT_PERS_STORAGE_DIR_ROOT}"
 
+# $1 = from, $2 = to
 function copy_all() {
-	from=$1
-	to=$2
-	cd ${from}
+	support=/tmp/successfully-copied
+	> "${support}"
+	chmod 770 "${support}"
+	chgrp "${USER_PERS_STORAGE_GROUP}" "${support}"
+	cd $1
 	while IFS= read -r file_path; do
-                runuser user -c "cp -r --preserve --parents ${file_path:1} ${to}"
+                runuser user -c "cp -r --preserve --parents ${file_path:1} $2 2> /dev/null \
+			&& echo ${file_path} >> ${support} \
+			|| echo '[ERROR] cannot copy $(echo $(eval [[ $1 == "/" ]] && echo "" || echo "$1/"))${file_path:1}'"
         done < "${USER_STRUCT_PERS_FILES_LIST}"
+	cat "${support}" > "${USER_STRUCT_PERS_FILES_LIST}"
+	rm "${support}"
 }
 
 # Store required user files on closing

@@ -3,6 +3,10 @@
 for file_path in "$@"
 do
 	[[ ${file_path} == /* ]] && abs_path="$(dirname ${file_path})" || abs_path="$(pwd $(dirname ${file_path}))/$(dirname ${file_path})"
-	abs_path="$(realpath ${abs_path}/$(basename ${file_path}))"
-	echo "${abs_path}" >> "${USER_STRUCT_PERS_FILES_LIST}"
+	abs_path="${abs_path}/$(basename ${file_path})"
+	if [ -f "${abs_path}" ] || [ -d "${abs_path}" ]; then
+		echo "$(realpath ${abs_path})" >> "${USER_STRUCT_PERS_FILES_LIST}"
+	else
+		echo "[ERROR] cannot persist ${abs_path}: file or directory does not exist"
+	fi
 done
