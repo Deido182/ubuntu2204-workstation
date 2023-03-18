@@ -1,0 +1,10 @@
+#!/bin/bash
+
+for file_path in "$@"
+do
+	[[ ${file_path} == /* ]] && abs_path="$(dirname ${file_path})" || abs_path="$(pwd $(dirname ${file_path}))/$(dirname ${file_path})"
+	abs_path="$(realpath ${abs_path}/$(basename ${file_path}))"
+	new_content=$(grep -wv "${abs_path}" "${USER_STRUCT_PERS_FILES_LIST}")
+        echo -e "${new_content}" > "${USER_STRUCT_PERS_FILES_LIST}"
+done
+sed -i '/^[[:blank:]]*$/ d' "${USER_STRUCT_PERS_FILES_LIST}"
